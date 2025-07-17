@@ -1,0 +1,6 @@
+openai
+psycopg2-binary
+SpeechRecognition
+pyttsx3
+tabulate
+python-dotenv
