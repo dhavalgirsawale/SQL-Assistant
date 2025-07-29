@@ -8,17 +8,11 @@ from datetime import datetime
 from tabulate import tabulate
 from dotenv import load_dotenv
 
-# =============================
-# Load Environment Variables
-# =============================
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_base = os.getenv("OPENAI_API_BASE") or "https://api.openai.com/v1"  # fallback to OpenAI
+openai.api_base = os.getenv("OPENAI_API_BASE") or "https://api.openai.com/v1"  
 
-# =============================
-# PostgreSQL Config
-# =============================
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "port": os.getenv("DB_PORT"),
@@ -27,10 +21,6 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME")
 }
 
-
-# =============================
-# Text-to-Speech Engine
-# =============================
 engine = pyttsx3.init()
 engine.setProperty('rate', 150)
 
@@ -179,7 +169,6 @@ def fallback_search(conn, user_input, last_table):
 
     try:
         with conn.cursor() as cursor:
-            # Securely check for valid table
             cursor.execute("""
                 SELECT table_name FROM information_schema.tables 
                 WHERE table_schema = 'public' AND table_name = %s
@@ -188,7 +177,6 @@ def fallback_search(conn, user_input, last_table):
                 speak(f"Table {last_table} not found in the database.")
                 return
 
-            # Find text columns
             cursor.execute("""
                 SELECT column_name FROM information_schema.columns
                 WHERE table_name = %s AND data_type IN ('character varying', 'text')
@@ -199,7 +187,6 @@ def fallback_search(conn, user_input, last_table):
                 speak(f"No text columns found to search in {last_table}.")
                 return
 
-            # Dynamic LIKE search
             conditions = " OR ".join([f"{col} ILIKE %s" for col in text_columns])
             query = f"SELECT * FROM {last_table} WHERE {conditions}"
             params = tuple([f"%{user_input}%"] * len(text_columns))
@@ -275,7 +262,6 @@ def main():
             speak("Goodbye!")
             break
 
-        # Pronoun replacement with safer regex
         for pronoun in ["he", "she", "they", "it", "that"]:
             for col, val in conversation_context["last_filters"].items():
                 command = re.sub(rf"\b{pronoun}\b", val, command, flags=re.IGNORECASE)
